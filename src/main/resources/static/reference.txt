@@ -1,0 +1,5 @@
+If you are using Maven to run the application:
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="--enable-preview"
+
+To delete a file in Postman
+http://localhost:8085/api/data-shift/delete?filename=ESOA_February2025.pdf

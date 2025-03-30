@@ -1,0 +1,245 @@
+package data_shift.dataprocessing;
+
+import data_shift.entity.DataShiftExtractedDataEntity;
+import data_shift.repository.DataShiftExtractedDataRepository;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+@Service
+public class PDFFileDataExtractor {
+
+    @Autowired
+    private DataShiftExtractedDataRepository dataShiftExtractedDataRepository; // Corrected injection
+
+    private String controlId;
+    private String controlName;
+
+    public PDFFileDataExtractor() {
+    }
+
+    public void setControlId(String controlId) {
+        this.controlId = controlId;
+    }
+
+    public void setControlIdentifier(String controlIdentifier) {
+        if (controlIdentifier != null && !controlIdentifier.trim().isEmpty()) {
+        } else {
+            throw new IllegalArgumentException("Control Identifier cannot be null or empty");
+        }
+    }
+
+    public void setControlName(String controlName) {
+        this.controlName = controlName;
+    }
+
+    public void generateData(List<String> keywordLines, InputStream file, String fileName) throws IOException {
+        // Create a temporary file
+        Path tempFile = Files.createTempFile("pdf-", ".pdf");
+        // Copy the input stream to the temporary file
+        Files.copy(file, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        // Create a File object from the temporary file path
+        File pdfFile = tempFile.toFile();
+
+        if (!pdfFile.exists()) {
+            throw new IllegalArgumentException("File not found: " + pdfFile.getAbsolutePath());
+        }
+
+        if (keywordLines.isEmpty()) {
+            throw new IllegalArgumentException("No keywords found. Please add keywords in the database.");
+        }
+
+        for (String keyword : keywordLines) {
+            processKeyword(pdfFile, keyword, fileName);
+        }
+        System.out.println("Exiting...\n\n");
+        // Delete the temporary file
+        Files.deleteIfExists(tempFile);
+    }
+
+    private void processKeyword(File pdfFile, String keyword, String fileName) {
+        try (PDDocument document = Loader.loadPDF(pdfFile)) {
+            extractText(document, keyword, fileName);
+        } catch (IOException e) {
+            throw new RuntimeException("Error processing PDF file for keyword '" + keyword + "': " + e.getMessage(), e);
+        }
+    }
+
+    public void extractText(PDDocument document, String keyword, String pdfFileName) throws IOException {
+        PDFTextStripper textStripper = new PDFTextStripper();
+        Map<Integer, List<String>> pageParagraphs = new HashMap<>();
+        Map<Integer, List<String>> pageTableRows = new HashMap<>();
+        int startPage = 1;
+        int endPage = document.getNumberOfPages();
+
+        for (int pageNumber = startPage; pageNumber <= endPage; pageNumber++) {
+            textStripper.setStartPage(pageNumber);
+            textStripper.setEndPage(pageNumber);
+            String pageText = textStripper.getText(document);
+
+            List<String> tableRegions = detectTables(pageText);
+            if (!tableRegions.isEmpty()) {
+                List<String> allParagraphs = new ArrayList<>();
+                List<String> allRows = new ArrayList<>();
+                for (String tableRegion : tableRegions) {
+                    allParagraphs.addAll(extractParagraphs(tableRegion));
+                    allRows.addAll(extractTableRows(tableRegion));
+                }
+                pageParagraphs.put(pageNumber, allParagraphs);
+                pageTableRows.put(pageNumber, allRows);
+            } else {
+                pageParagraphs.put(pageNumber, extractParagraphs(pageText));
+            }
+        }
+
+        List<SentenceLocation> extractedSentences = extractSentencesWithLocation(document, keyword,
+                pageParagraphs, pageTableRows);
+        if (!extractedSentences.isEmpty()) {
+            saveOutputToDatabase(extractedSentences, keyword, pdfFileName); // Save to database
+        }
+    }
+
+    public List<SentenceLocation> extractSentencesWithLocation(PDDocument document,
+            String keyword, Map<Integer, List<String>> pageParagraphs,
+            Map<Integer, List<String>> pageTableRows) throws IOException {
+        PDFTextStripper textStripper = new PDFTextStripper();
+        List<SentenceLocation> result = new ArrayList<>();
+        int startPage = 1;
+        int endPage = document.getNumberOfPages();
+
+        for (int pageNumber = startPage; pageNumber <= endPage; pageNumber++) {
+            textStripper.setStartPage(pageNumber);
+            textStripper.setEndPage(pageNumber);
+            String pageText = textStripper.getText(document);
+            String[] sentences = pageText.split("(?<=[.!?])\\s+");
+            List<String> paragraphs = pageParagraphs.get(pageNumber);
+            List<String> tableRows = pageTableRows.get(pageNumber);
+
+            if (paragraphs == null)
+                continue;
+
+            for (String evidence : sentences) {
+                if (evidence.toLowerCase().contains(keyword.toLowerCase())) {
+                    String title = "N/A";
+                    if (tableRows != null) {
+                        title = findTableRowHeader(evidence, tableRows);
+                    }
+                    result.add(new SentenceLocation(evidence, pageNumber, title));
+                }
+            }
+        }
+        return result;
+    }
+
+    private List<String> extractParagraphs(String pageText) {
+        List<String> paragraphs = new ArrayList<>();
+        String[] potentialParagraphs = pageText.split("(\r?\n)+");
+
+        for (String potentialParagraph : potentialParagraphs) {
+            String trimmedParagraph = potentialParagraph.trim();
+            if (!trimmedParagraph.isEmpty()) {
+                String[] sentences = trimmedParagraph.split("(?<=[.!?])\\s+");
+                for (String evidence : sentences) {
+                    String trimmedSentence = evidence.trim();
+                    if (!trimmedSentence.isEmpty()) {
+                        paragraphs.add(trimmedSentence);
+                    }
+                }
+            }
+        }
+        return paragraphs;
+    }
+
+    static class SentenceLocation {
+        private String evidence;
+        private int pageNumber;
+        private String title;
+
+        public SentenceLocation(String evidence, int pageNumber, String title) {
+            this.evidence = evidence;
+            this.pageNumber = pageNumber;
+            this.title = title;
+        }
+
+        public String getSentence() {
+            return evidence;
+        }
+
+        public int getPageNumber() {
+            return pageNumber;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+    }
+
+    private List<String> detectTables(String pageText) {
+        List<String> tableRegions = new ArrayList<>();
+
+        String[] lines = pageText.split("\r?\n");
+        Pattern tablePattern = Pattern.compile("^((\\s*\\S+\\s+){2,})$");
+        for (int i = 0; i < lines.length - 2; i++) {
+            Matcher matcher1 = tablePattern.matcher(lines[i].trim());
+            Matcher matcher2 = tablePattern.matcher(lines[i + 1].trim());
+            Matcher matcher3 = tablePattern.matcher(lines[i + 2].trim());
+            if (matcher1.matches() && matcher2.matches() && matcher3.matches()) {
+                tableRegions.add(lines[i] + "\n" + lines[i + 1] + "\n" + lines[i + 2]);
+            }
+        }
+        return tableRegions;
+    }
+
+    private List<String> extractTableRows(String tableRegion) {
+        List<String> rows = new ArrayList<>();
+        String[] lines = tableRegion.split("\r?\n");
+        for (String line : lines) {
+            rows.add(line.trim());
+        }
+        return rows;
+    }
+
+    private String findTableRowHeader(String evidence, List<String> tableRows) {
+        for (String row : tableRows) {
+            if (row.contains(evidence)) {
+                String[] cells = row.split("\\s{2,}");
+                if (cells.length > 0) {
+                    return cells[0].trim();
+                }
+            }
+        }
+        return "N/A (Table Row)";
+    }
+
+    private void saveOutputToDatabase(List<SentenceLocation> extractedSentences, String keyword,
+            String pdfFileName) {
+
+        for (SentenceLocation sentenceLocation : extractedSentences) {
+            DataShiftExtractedDataEntity extractedData = new DataShiftExtractedDataEntity();
+            extractedData.setControlId(this.controlId);
+            extractedData.setControlName(this.controlName);
+            extractedData.setDocumentName(pdfFileName);
+            extractedData.setPageNumber(String.valueOf(sentenceLocation.getPageNumber()));
+            extractedData.setKeywords(keyword);
+            extractedData.setEvidence(sentenceLocation.getSentence());
+            dataShiftExtractedDataRepository.save(extractedData); // Corrected repository call
+        }
+        System.out.println("Data saved to the database successfully.");
+    }
+
+}
