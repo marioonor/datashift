@@ -27,6 +27,10 @@ public class PDFFileDataExtractor {
     @Autowired
     private DataShiftExtractedDataRepository dataShiftExtractedDataRepository; // Corrected injection
 
+    @Autowired
+    private KeywordsDataGenerator keywordsDataGenerator;
+    
+
     private String controlId;
     private String controlName;
 
@@ -48,7 +52,7 @@ public class PDFFileDataExtractor {
         this.controlName = controlName;
     }
 
-    public void generateData(List<String> keywordLines, InputStream file, String fileName) throws IOException {
+    public void generateData(List<String> keywordLines, InputStream file, String fileName) throws IOException{
         // Create a temporary file
         Path tempFile = Files.createTempFile("pdf-", ".pdf");
         // Copy the input stream to the temporary file
@@ -229,17 +233,24 @@ public class PDFFileDataExtractor {
     private void saveOutputToDatabase(List<SentenceLocation> extractedSentences, String keyword,
             String pdfFileName) {
 
-        for (SentenceLocation sentenceLocation : extractedSentences) {
-            DataShiftExtractedDataEntity extractedData = new DataShiftExtractedDataEntity();
-            extractedData.setControlId(this.controlId);
-            extractedData.setControlName(this.controlName);
-            extractedData.setDocumentName(pdfFileName);
-            extractedData.setPageNumber(String.valueOf(sentenceLocation.getPageNumber()));
-            extractedData.setKeywords(keyword);
-            extractedData.setEvidence(sentenceLocation.getSentence());
-            dataShiftExtractedDataRepository.save(extractedData); // Corrected repository call
-        }
-        System.out.println("Data saved to the database successfully.");
+                for (SentenceLocation sentenceLocation : extractedSentences) {
+                    DataShiftExtractedDataEntity extractedData = new DataShiftExtractedDataEntity();
+                    // Get controlId and controlName based on the keyword
+                    Map<String, String> controlIdentifier = keywordsDataGenerator.getControlIdentifierByKeyword(keyword);
+                    if (controlIdentifier != null) {
+                        extractedData.setControlId(controlIdentifier.get("controlId"));
+                        extractedData.setControlName(controlIdentifier.get("controlName"));
+                    } else {
+                        extractedData.setControlId("N/A");
+                        extractedData.setControlName("N/A");
+                    }
+                    extractedData.setDocumentName(pdfFileName);
+                    extractedData.setPageNumber(String.valueOf(sentenceLocation.getPageNumber()));
+                    extractedData.setKeywords(keyword);
+                    extractedData.setEvidence(sentenceLocation.getSentence());
+                    dataShiftExtractedDataRepository.save(extractedData);
+                }
+                System.out.println("Data saved to the database successfully.");
     }
 
 }

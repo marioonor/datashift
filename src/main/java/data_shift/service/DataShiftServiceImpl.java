@@ -28,6 +28,11 @@ public class DataShiftServiceImpl {
     @Autowired
     private PDFFileDataExtractor pdfFileDataExtractor;
 
+    public void processPdf(InputStream pdfFileStream, String fileName) throws IOException {
+        List<String> allKeywords = keywordsDataGenerator.getAllUniqueKeywords();
+        pdfFileDataExtractor.generateData(allKeywords, pdfFileStream, fileName);
+    }
+    
     public void saveFileData(InputStream file) throws IOException {
         System.out.println("saveFileData method called");
         List<DataShiftExcelEntity> dataShiftExcelEntities = new LinkedList<>();
@@ -111,15 +116,7 @@ public class DataShiftServiceImpl {
     }
 
     public void extractDataFromPdf(InputStream file, String fileName) throws IOException {
-        List<DataShiftExcelEntity> dataShiftExcelEntities = dataShiftExcelRepository.findAll();
-        List<String> keywordLines = keywordsDataGenerator.extractKeywords(dataShiftExcelEntities);
-        if (!dataShiftExcelEntities.isEmpty()) {
-            for (DataShiftExcelEntity dataShiftExcelEntity : dataShiftExcelEntities) {
-                pdfFileDataExtractor.setControlId(dataShiftExcelEntity.getControlId());
-                pdfFileDataExtractor.setControlIdentifier(dataShiftExcelEntity.getControlId());
-                pdfFileDataExtractor.setControlName(dataShiftExcelEntity.getControlName());
-            }
-        }
+        List<String> keywordLines = keywordsDataGenerator.getAllUniqueKeywords();
         pdfFileDataExtractor.generateData(keywordLines, file, fileName);
     }
 }

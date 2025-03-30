@@ -1,6 +1,7 @@
 package data_shift.dataprocessing;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -118,4 +119,34 @@ public class KeywordsDataGenerator {
         }
         return controlKeywordsDTOList;
     }
+
+    // New method to get all unique keywords from all control identifiers
+    public List<String> getAllUniqueKeywords() {
+        List<DataShiftExcelEntity> files = dataShiftExcelRepository.findAll();
+        return files.stream()
+                .map(DataShiftExcelEntity::getKeywords)
+                .filter(keywords -> keywords != null && !keywords.isEmpty())
+                .flatMap(keywords -> java.util.Arrays.stream(keywords.split("\n")))
+                .map(String::trim)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    public Map<String, String> getControlIdentifierByKeyword(String keyword) {
+        List<DataShiftExcelEntity> files = dataShiftExcelRepository.findAll();
+        Optional<DataShiftExcelEntity> foundEntity = files.stream()
+                .filter(entity -> entity.getKeywords() != null && entity.getKeywords().contains(keyword))
+                .findFirst();
+
+        if (foundEntity.isPresent()) {
+            Map<String, String> result = new HashMap<>();
+            result.put("controlId", foundEntity.get().getControlId());
+            result.put("controlName", foundEntity.get().getControlName());
+            return result;
+        } else {
+            return null; // Or throw an exception if a match is required
+        }
+    }
+
+
 }
