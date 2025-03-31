@@ -31,7 +31,9 @@ public class PDFFileDataExtractor {
     private KeywordsDataGenerator keywordsDataGenerator;
     
 
+    @SuppressWarnings("unused")
     private String controlId;
+    @SuppressWarnings("unused")
     private String controlName;
 
     public PDFFileDataExtractor() {
