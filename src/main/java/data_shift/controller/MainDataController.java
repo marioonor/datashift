@@ -8,20 +8,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import data_shift.entity.DataShiftExtractedDataEntity;
-import data_shift.service.ExtractedDataService;
+import data_shift.entity.DataMainEntity;
+import data_shift.service.MainDataService;
 
 @RestController
-@RequestMapping("extracted-data")
+@RequestMapping("main-data")
 @CrossOrigin(origins = "http://localhost:4200")
-public class ExtractedDataController {
-
+public class MainDataController {
+    
     @Autowired
-    private ExtractedDataService extractedDataService;
+    private MainDataService mainDataService;
 
     @GetMapping
-    public List<DataShiftExtractedDataEntity> getAllExtractedData() {
-        return extractedDataService.findAll();
+    public List<DataMainEntity> getAllMainData() {
+        return mainDataService.findAll();
     }
+    
 }
-

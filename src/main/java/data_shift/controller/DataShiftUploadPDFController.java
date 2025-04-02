@@ -19,10 +19,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 @RestController
 @RequestMapping("api/data-shift")
 @CrossOrigin(origins = "http://localhost:4200")
-public class DataShiftController {
+public class DataShiftUploadPDFController {
 
-    // This endpoint is used to upload a PDF file
-    // The file is uploaded to the server in the 'uploads' directory
     @PostMapping("/upload")
     public ResponseEntity<Map<String, String>> uploadPDF(@RequestParam("file") MultipartFile file) {
 
@@ -88,8 +86,6 @@ public class DataShiftController {
         }
     }
 
-    // This endpoint is used to test if the server is up and running
-    // It returns a simple message if the server is running
     @GetMapping("/test")
     public ResponseEntity<String> testEndpoint() {
         return ResponseEntity.ok("Server is up and running");

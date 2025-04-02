@@ -22,7 +22,7 @@ import data_shift.service.DataShiftServiceImpl;
 
 @RestController
 @RequestMapping("data")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:4200")
 public class DataShiftExcelController {
 
     @Autowired
