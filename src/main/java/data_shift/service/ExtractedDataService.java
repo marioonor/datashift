@@ -12,7 +12,7 @@ import data_shift.repository.DataShiftExtractedDataRepository;
 public class ExtractedDataService {
 
     @Autowired
-    private DataShiftExtractedDataRepository dataShiftExtractedDataRepository; // Corrected repository
+    private DataShiftExtractedDataRepository dataShiftExtractedDataRepository; 
 
     public List<DataShiftExtractedDataEntity> findAll() {
         return dataShiftExtractedDataRepository.findAll();

@@ -40,7 +40,8 @@ public class KeywordsDataGenerator {
             for (Map.Entry<String, List<DataShiftExcelEntity>> controlNameEntry : controlNameMap.entrySet()) {
                 String controlName = controlNameEntry.getKey();
                 List<DataShiftExcelEntity> controlData = controlNameEntry.getValue();
-                Optional<String> keywordsOptional = controlData.stream().map(DataShiftExcelEntity::getKeywords).findFirst();
+                Optional<String> keywordsOptional = controlData.stream().map(DataShiftExcelEntity::getKeywords)
+                        .findFirst();
                 List<String> keywords = new ArrayList<>();
                 if (keywordsOptional.isPresent()) {
                     String[] keywordsArray = keywordsOptional.get().split("\n");
@@ -49,8 +50,8 @@ public class KeywordsDataGenerator {
                     }
                 }
 
-                // Create ControlKeywordsDTO and add it to the list
-                ControlKeywordsDTO controlKeywordsDTO = new ControlKeywordsDTO(controlIdentifier, controlName, keywords);
+                ControlKeywordsDTO controlKeywordsDTO = new ControlKeywordsDTO(controlIdentifier, controlName,
+                        keywords);
                 controlKeywordsDTOList.add(controlKeywordsDTO);
             }
         }
@@ -63,19 +64,17 @@ public class KeywordsDataGenerator {
                 .collect(Collectors.groupingBy(DataShiftExcelEntity::getControlId,
                         Collectors.groupingBy(DataShiftExcelEntity::getControlName)))
                 .entrySet().stream()
-                .flatMap(controlIdEntry -> controlIdEntry.getValue().entrySet().stream()
-                        .map(controlNameEntry -> new ControlIdentifierDTO(controlIdEntry.getKey(), controlNameEntry.getKey())))
+                .flatMap(controlIdEntry -> controlIdEntry.getValue().entrySet().stream().map(
+                        controlNameEntry -> new ControlIdentifierDTO(controlIdEntry.getKey(), controlNameEntry.getKey())))
                 .distinct()
                 .collect(Collectors.toList());
     }
 
     public List<String> extractKeywords(List<DataShiftExcelEntity> controlData) {
         List<String> keywordsList = new ArrayList<>();
-        // Concatenate all keywords from the controlData
-        String concatenatedKeywords = controlData.stream()
-                .map(DataShiftExcelEntity::getKeywords)
-                .filter(keywords -> keywords != null && !keywords.isEmpty())
-                .collect(Collectors.joining("\n"));
+
+        String concatenatedKeywords = controlData.stream().map(DataShiftExcelEntity::getKeywords)
+                .filter(keywords -> keywords != null && !keywords.isEmpty()).collect(Collectors.joining("\n"));
 
         String regex = "(?m)^.*$";
         Pattern pattern = Pattern.compile(regex);
@@ -103,7 +102,8 @@ public class KeywordsDataGenerator {
             for (Map.Entry<String, List<DataShiftExcelEntity>> controlNameEntry : controlNameMap.entrySet()) {
                 String controlName = controlNameEntry.getKey();
                 List<DataShiftExcelEntity> controlData = controlNameEntry.getValue();
-                Optional<String> keywordsOptional = controlData.stream().map(DataShiftExcelEntity::getKeywords).findFirst();
+                Optional<String> keywordsOptional = controlData.stream().map(DataShiftExcelEntity::getKeywords)
+                        .findFirst();
                 List<String> keywords = new ArrayList<>();
                 if (keywordsOptional.isPresent()) {
                     String[] keywordsArray = keywordsOptional.get().split("\n");
@@ -112,27 +112,24 @@ public class KeywordsDataGenerator {
                     }
                 }
 
-                // Create ControlKeywordsDTO and add it to the list
-                ControlKeywordsDTO controlKeywordsDTO = new ControlKeywordsDTO(controlIdentifier, controlName, keywords);
+                ControlKeywordsDTO controlKeywordsDTO = new ControlKeywordsDTO(controlIdentifier, controlName,
+                        keywords);
                 controlKeywordsDTOList.add(controlKeywordsDTO);
             }
         }
         return controlKeywordsDTOList;
     }
 
-    // New method to get all unique keywords from all control identifiers
     public List<String> getAllUniqueKeywords() {
         List<DataShiftExcelEntity> files = dataShiftExcelRepository.findAll();
-        return files.stream()
-                .map(DataShiftExcelEntity::getKeywords)
+        return files.stream().map(DataShiftExcelEntity::getKeywords)
                 .filter(keywords -> keywords != null && !keywords.isEmpty())
-                .flatMap(keywords -> java.util.Arrays.stream(keywords.split("\n")))
-                .map(String::trim)
-                .distinct()
+                .flatMap(keywords -> java.util.Arrays.stream(keywords.split("\n"))).map(String::trim).distinct()
                 .collect(Collectors.toList());
     }
 
     public Map<String, String> getControlIdentifierByKeyword(String keyword) {
+        System.out.println("getControlIdentifierByKeyword() method called with keyword: " + keyword);
         List<DataShiftExcelEntity> files = dataShiftExcelRepository.findAll();
         Optional<DataShiftExcelEntity> foundEntity = files.stream()
                 .filter(entity -> entity.getKeywords() != null && entity.getKeywords().contains(keyword))
@@ -144,9 +141,8 @@ public class KeywordsDataGenerator {
             result.put("controlName", foundEntity.get().getControlName());
             return result;
         } else {
-            return null; // Or throw an exception if a match is required
+            return null;
         }
     }
-
 
 }

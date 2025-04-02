@@ -32,7 +32,8 @@ public class DataShiftExcelController {
     KeywordsDataGenerator keywordsDataGenerator;
 
     @PostMapping(value = "/path", consumes = "multipart/form-data")
-    public ResponseEntity<UploadExcelResponseDTO> saveFileData(@RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity<UploadExcelResponseDTO> saveFileData(@RequestParam("file") MultipartFile file)
+            throws IOException {
         try {
             dataShiftServiceImpl.saveFileData(file.getInputStream());
             UploadExcelResponseDTO response = new UploadExcelResponseDTO("Data saved successfully!");
@@ -40,7 +41,7 @@ public class DataShiftExcelController {
         } catch (IOException e) {
             e.printStackTrace();
             UploadExcelResponseDTO response = new UploadExcelResponseDTO("Error saving data: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response); 
+            return ResponseEntity.badRequest().body(response);
         }
     }
 

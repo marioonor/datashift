@@ -25,11 +25,13 @@ import java.util.regex.Pattern;
 public class PDFFileDataExtractor {
 
     @Autowired
-    private DataShiftExtractedDataRepository dataShiftExtractedDataRepository; // Corrected injection
+    private DataShiftExtractedDataRepository dataShiftExtractedDataRepository;
 
     @Autowired
     private KeywordsDataGenerator keywordsDataGenerator;
-    
+
+    @Autowired
+    private JoinedTableDataForMain joinedTableDataForMain;
 
     @SuppressWarnings("unused")
     private String controlId;
@@ -54,7 +56,8 @@ public class PDFFileDataExtractor {
         this.controlName = controlName;
     }
 
-    public void generateData(List<String> keywordLines, InputStream file, String fileName) throws IOException{
+    public void generateData(List<String> keywordLines, InputStream file, String fileName) throws IOException {
+        System.out.println("generateData() method called!");
         // Create a temporary file
         Path tempFile = Files.createTempFile("pdf-", ".pdf");
         // Copy the input stream to the temporary file
@@ -76,6 +79,7 @@ public class PDFFileDataExtractor {
         System.out.println("Exiting...\n\n");
         // Delete the temporary file
         Files.deleteIfExists(tempFile);
+        joinedTableDataForMain.joinedTablesData(); // Call joinedTablesData() here after processing all keywords
     }
 
     private void processKeyword(File pdfFile, String keyword, String fileName) {
@@ -234,25 +238,24 @@ public class PDFFileDataExtractor {
 
     private void saveOutputToDatabase(List<SentenceLocation> extractedSentences, String keyword,
             String pdfFileName) {
+        System.out.println("saveOutputToDatabase() method called!");
+        for (SentenceLocation sentenceLocation : extractedSentences) {
+            DataShiftExtractedDataEntity extractedData = new DataShiftExtractedDataEntity();
 
-                for (SentenceLocation sentenceLocation : extractedSentences) {
-                    DataShiftExtractedDataEntity extractedData = new DataShiftExtractedDataEntity();
-                    // Get controlId and controlName based on the keyword
-                    Map<String, String> controlIdentifier = keywordsDataGenerator.getControlIdentifierByKeyword(keyword);
-                    if (controlIdentifier != null) {
-                        extractedData.setControlId(controlIdentifier.get("controlId"));
-                        extractedData.setControlName(controlIdentifier.get("controlName"));
-                    } else {
-                        extractedData.setControlId("N/A");
-                        extractedData.setControlName("N/A");
-                    }
-                    extractedData.setDocumentName(pdfFileName);
-                    extractedData.setPageNumber(String.valueOf(sentenceLocation.getPageNumber()));
-                    extractedData.setKeywords(keyword);
-                    extractedData.setEvidence(sentenceLocation.getSentence());
-                    dataShiftExtractedDataRepository.save(extractedData);
-                }
-                System.out.println("Data saved to the database successfully.");
+            Map<String, String> controlIdentifier = keywordsDataGenerator.getControlIdentifierByKeyword(keyword);
+            if (controlIdentifier != null) {
+                extractedData.setControlId(controlIdentifier.get("controlId"));
+                extractedData.setControlName(controlIdentifier.get("controlName"));
+            } else {
+                extractedData.setControlId("N/A");
+                extractedData.setControlName("N/A");
+            }
+            extractedData.setDocumentName(pdfFileName);
+            extractedData.setPageNumber(String.valueOf(sentenceLocation.getPageNumber()));
+            extractedData.setKeywords(keyword);
+            extractedData.setEvidence(sentenceLocation.getSentence());
+            dataShiftExtractedDataRepository.save(extractedData);
+        }
+        System.out.println("Data saved to the database successfully.");
     }
-
 }

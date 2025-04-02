@@ -15,14 +15,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 @Table(name = "data_shift_main_data")
-
 public class DataMainEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
-    
+
     private String controlId;
 
     @Column(name = "control_name", columnDefinition = "TEXT")
@@ -34,24 +32,17 @@ public class DataMainEntity {
     @Column(name = "keywords", columnDefinition = "TEXT")
     private String keywords;
 
-    @Column(name = "document_name", columnDefinition = "TEXT")
-    private String documentName;
-
-    @Column(name = "page_number", columnDefinition = "TEXT")
-    private String pagenumber;
-
     @Column(name = "evidence", columnDefinition = "TEXT")
     private String evidence;
+
+    @Column(name = "document_name", columnDefinition = "TEXT") 
+    private String documentName;
+
+    @Column(name = "page_number")
+    private String pageNumber;
 
     @Column(name = "remarks", columnDefinition = "TEXT")
     private String remarks;
 
     private String status;
-
-    
-
-    
-
-    
-
 }

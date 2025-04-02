@@ -24,4 +24,3 @@ public class ExtractedDataController {
         return extractedDataService.findAll();
     }
 }
-
