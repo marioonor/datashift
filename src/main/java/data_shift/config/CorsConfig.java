@@ -13,11 +13,11 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(@SuppressWarnings("null") CorsRegistry registry) {
-                registry.addMapping("/**") // Allow CORS for all endpoints
-                        .allowedOrigins("http://localhost:4200", "http://192.168.0.122:4200") // Allow requests from
-                                                                                              // your Angular app
-                        .allowedMethods("GET", "POST", "PUT", "DELETE") // Allowed HTTP methods
-                        .allowedHeaders("*"); // Allow all headers
+                registry.addMapping("/**")
+                        .allowedOrigins("http://localhost:4200", "http://192.168.0.122:4200")
+
+                        .allowedMethods("GET", "POST", "PUT", "DELETE")
+                        .allowedHeaders("*");
             }
         };
     }
