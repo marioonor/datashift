@@ -43,6 +43,7 @@ public class DataShiftUploadPDFController {
 
             Map<String, String> response = new HashMap<>();
             response.put("message", "File uploaded successfully");
+            response.put("documentName", file.getOriginalFilename()); // Return the documentName in a separate field
             response.put("path", uploadedPath.getAbsolutePath());
             return ResponseEntity.ok(response);
 

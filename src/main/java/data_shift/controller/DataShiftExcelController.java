@@ -1,5 +1,7 @@
 package data_shift.controller;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -58,9 +60,20 @@ public class DataShiftExcelController {
         return ResponseEntity.ok(controlKeywordsList);
     }
 
-    @PostMapping(value = "/pdf", consumes = "multipart/form-data")
-    public ResponseEntity<String> extractDataFromPdf(@RequestParam("file") MultipartFile file) throws IOException {
-        dataShiftServiceImpl.extractDataFromPdf(file.getInputStream(), file.getOriginalFilename());
-        return ResponseEntity.ok("Data extracted successfully");
+    @PostMapping(value = "/pdf")
+    public ResponseEntity<UploadExcelResponseDTO> extractDataFromPdf(@RequestParam("documentName") String documentName)
+            throws IOException {
+        try {
+            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            File pdfFile = new File(uploadDir + documentName);
+            if (!pdfFile.exists()) {
+                return ResponseEntity.badRequest().body(new UploadExcelResponseDTO("File not found: " + documentName));
+            }
+            dataShiftServiceImpl.extractDataFromPdf(new FileInputStream(pdfFile), pdfFile.getName());
+            return ResponseEntity.ok(new UploadExcelResponseDTO("Data extracted successfully"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(new UploadExcelResponseDTO("Error extracting data: " + e.getMessage()));
+        }
     }
 }

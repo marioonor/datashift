@@ -103,9 +103,9 @@ public class JoinedTableDataForMain {
 
         try {
             dataMainRepository.saveAll(dataMainEntities);
-            System.out.println("Data saved to data_shift_main_data successfully.");
+            System.out.println("Data saved successfully.");
         } catch (Exception e) {
-            System.err.println("Error saving to data_shift_main_data: " + e.getMessage());
+            System.err.println("Error saving to: " + e.getMessage());
             e.printStackTrace();
         }
 
