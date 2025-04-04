@@ -15,4 +15,15 @@ public class MainDataFrontendDTO {
     private String evidence; 
     private String remarks;
     private String status;
+
+    public String getDocumentName() {
+        return documentName;
+    }
+
+    public void setDocumentName(String documentName) {
+        this.documentName = documentName;
+    }
+
+    private String documentName;
+    private String pageNumber;
 }

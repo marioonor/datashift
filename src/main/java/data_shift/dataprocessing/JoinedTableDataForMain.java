@@ -1,13 +1,5 @@
 package data_shift.dataprocessing;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import data_shift.dto.MainDataDTO;
 import data_shift.entity.DataMainEntity;
 import data_shift.entity.DataShiftExcelEntity;
@@ -15,9 +7,22 @@ import data_shift.entity.DataShiftExtractedDataEntity;
 import data_shift.repository.DataMainRepository;
 import data_shift.repository.DataShiftExcelRepository;
 import data_shift.repository.DataShiftExtractedDataRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @Service
 public class JoinedTableDataForMain {
+
+    private static final Logger logger = LoggerFactory.getLogger(JoinedTableDataForMain.class);
 
     @Autowired
     DataShiftExtractedDataRepository dataShiftExtractedDataRepository;
@@ -29,69 +34,56 @@ public class JoinedTableDataForMain {
     DataMainRepository dataMainRepository;
 
     public List<MainDataDTO> joinedTablesData() {
-        System.out.println("joinedTablesData() method called!");
+        logger.info("joinedTablesData() method called!");
 
         List<DataShiftExtractedDataEntity> extractedData = dataShiftExtractedDataRepository.findAll();
         List<DataShiftExcelEntity> excelData = dataShiftExcelRepository.findAll();
 
-        // Group extracted data by controlId, documentName, pageNumber, keywords, and evidence
-        Map<String, Map<String, Map<String, Map<String, Map<String, List<DataShiftExtractedDataEntity>>>>>> groupedExtractedData = extractedData
-                .stream()
-                .collect(Collectors.groupingBy(DataShiftExtractedDataEntity::getControlId,
-                        Collectors.groupingBy(DataShiftExtractedDataEntity::getDocumentName,
-                                Collectors.groupingBy(DataShiftExtractedDataEntity::getPageNumber,
-                                        Collectors.groupingBy(DataShiftExtractedDataEntity::getKeywords,
-                                                Collectors.groupingBy(DataShiftExtractedDataEntity::getEvidence))))));
+        // Group extracted data by document name, then keywords, then collect unique page numbers
+        Map<String, Map<String, Set<Integer>>> groupedExtractedData = extractedData.stream()
+                .collect(Collectors.groupingBy(
+                        DataShiftExtractedDataEntity::getDocumentName,
+                        Collectors.groupingBy(
+                                DataShiftExtractedDataEntity::getKeywords,
+                                Collectors.mapping(
+                                        entity -> Integer.parseInt(entity.getPageNumber()),
+                                        Collectors.toCollection(TreeSet::new)
+                                )
+                        )
+                ));
 
         List<MainDataDTO> mainDataDTOList = new ArrayList<>();
-
         for (DataShiftExcelEntity excelRow : excelData) {
             String controlId = excelRow.getControlId();
             String controlName = excelRow.getControlName();
             String controlDescription = excelRow.getControlDescription();
             String excelKeywords = excelRow.getKeywords();
 
-            System.out.println("Checking Excel Row: controlId=" + controlId + ", keywords=" + excelKeywords);
+            logger.info("Checking Excel Row: controlId={}, keywords={}", controlId, excelKeywords);
 
-            if (groupedExtractedData.containsKey(controlId)) {
-                Map<String, Map<String, Map<String, Map<String, List<DataShiftExtractedDataEntity>>>>> documentNameMap = groupedExtractedData
-                        .get(controlId);
-                for (Map.Entry<String, Map<String, Map<String, Map<String, List<DataShiftExtractedDataEntity>>>>> documentNameEntry : documentNameMap
-                        .entrySet()) {
-                    String documentName = documentNameEntry.getKey();
-                    Map<String, Map<String, Map<String, List<DataShiftExtractedDataEntity>>>> pageNumberMap = documentNameEntry
-                            .getValue();
-                    for (Map.Entry<String, Map<String, Map<String, List<DataShiftExtractedDataEntity>>>> pageNumberEntry : pageNumberMap
-                            .entrySet()) {
-                        String pageNumber = pageNumberEntry.getKey();
-                        Map<String, Map<String, List<DataShiftExtractedDataEntity>>> keywordsMap = pageNumberEntry
-                                .getValue();
+            for (Map.Entry<String, Map<String, Set<Integer>>> documentEntry : groupedExtractedData.entrySet()) {
+                String documentName = documentEntry.getKey();
+                Map<String, Set<Integer>> keywordPageMap = documentEntry.getValue();
 
-                        // Iterate through each keyword in the extracted data
-                        for (Map.Entry<String, Map<String, List<DataShiftExtractedDataEntity>>> keywordEntry : keywordsMap
-                                .entrySet()) {
-                            String extractedKeyword = keywordEntry.getKey();
-                            // Check if any of the excel keywords contains the extracted keyword
-                            if (excelKeywords != null && excelKeywords.contains(extractedKeyword)) {
-                                Map<String, List<DataShiftExtractedDataEntity>> evidenceMap = keywordEntry.getValue();
-                                for (Map.Entry<String, List<DataShiftExtractedDataEntity>> evidenceEntry : evidenceMap
-                                        .entrySet()) {
-                                    String evidenceFromExtracted = evidenceEntry.getKey();
-                                    // Create MainDataDTO and populate it
-                                    MainDataDTO mainDataDTO = new MainDataDTO();
-                                    mainDataDTO.setControlId(controlId);
-                                    mainDataDTO.setControlName(controlName);
-                                    mainDataDTO.setControlDescription(controlDescription);
-                                    mainDataDTO.setKeywords(extractedKeyword); // Use the extracted keyword
-                                    mainDataDTO.setEvidence(evidenceFromExtracted);
-                                    mainDataDTO.setRemarks("");
-                                    mainDataDTO.setStatus("Pending");
-                                    mainDataDTO.setDocumentName(documentName);
-                                    mainDataDTO.setPageNumber(pageNumber);
-                                    mainDataDTOList.add(mainDataDTO);
-                                }
-                            }
-                        }
+                for (Map.Entry<String, Set<Integer>> keywordEntry : keywordPageMap.entrySet()) {
+                    String keyword = keywordEntry.getKey();
+                    if (excelKeywords != null && excelKeywords.contains(keyword)) {
+                        Set<Integer> pages = keywordEntry.getValue();
+                        MainDataDTO mainDataDTO = new MainDataDTO();
+                        mainDataDTO.setControlId(controlId);
+                        mainDataDTO.setControlName(controlName);
+                        mainDataDTO.setControlDescription(controlDescription);
+                        mainDataDTO.setKeywords(keyword);
+                        // Add newlines for emphasis
+                        String evidence = "Document: " + documentName + "\n" +
+                                "Page: " + pages.stream().map(String::valueOf).collect(Collectors.joining(", ")) + "\n" +
+                                "Keywords: " + keyword;
+                        mainDataDTO.setEvidence(evidence);
+                        mainDataDTO.setRemarks("");
+                        mainDataDTO.setStatus("Pending");
+                        mainDataDTO.setDocumentName(documentName);
+                        mainDataDTO.setPageNumber(pages.stream().map(String::valueOf).collect(Collectors.joining(", ")));
+                        mainDataDTOList.add(mainDataDTO);
                     }
                 }
             }
@@ -103,17 +95,15 @@ public class JoinedTableDataForMain {
 
         try {
             dataMainRepository.saveAll(dataMainEntities);
-            System.out.println("Data saved successfully.");
+            logger.info("Data saved successfully.");
         } catch (Exception e) {
-            System.err.println("Error saving to: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Error saving to database: {}", e.getMessage(), e);
         }
 
+        logger.info("joinedTablesData() method finished!");
         return mainDataDTOList;
     }
 
-
-    
     private DataMainEntity convertToDataMainEntity(MainDataDTO mainDataDTO) {
         DataMainEntity dataMainEntity = new DataMainEntity();
         dataMainEntity.setControlId(mainDataDTO.getControlId());
@@ -127,5 +117,4 @@ public class JoinedTableDataForMain {
         dataMainEntity.setPageNumber(mainDataDTO.getPageNumber());
         return dataMainEntity;
     }
-
 }

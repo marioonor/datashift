@@ -5,6 +5,8 @@ import data_shift.repository.DataShiftExtractedDataRepository;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,8 @@ import java.util.regex.Pattern;
 
 @Service
 public class PDFFileDataExtractor {
+
+    private static final Logger logger = LoggerFactory.getLogger(PDFFileDataExtractor.class);
 
     @Autowired
     private DataShiftExtractedDataRepository dataShiftExtractedDataRepository;
@@ -46,8 +50,7 @@ public class PDFFileDataExtractor {
     }
 
     public void setControlIdentifier(String controlIdentifier) {
-        if (controlIdentifier != null && !controlIdentifier.trim().isEmpty()) {
-        } else {
+        if (controlIdentifier == null || controlIdentifier.trim().isEmpty()) {
             throw new IllegalArgumentException("Control Identifier cannot be null or empty");
         }
     }
@@ -57,35 +60,41 @@ public class PDFFileDataExtractor {
     }
 
     public void generateData(List<String> keywordLines, InputStream file, String fileName) throws IOException {
-        System.out.println("generateData() method called!");
-        // Create a temporary file
-        Path tempFile = Files.createTempFile("pdf-", ".pdf");
-        // Copy the input stream to the temporary file
-        Files.copy(file, tempFile, StandardCopyOption.REPLACE_EXISTING);
-        // Create a File object from the temporary file path
-        File pdfFile = tempFile.toFile();
+        logger.info("generateData() method called for file: {}", fileName);
+        Path tempFile = null;
+        try {
+            tempFile = Files.createTempFile("pdf-", ".pdf");
+            Files.copy(file, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            File pdfFile = tempFile.toFile();
 
-        if (!pdfFile.exists()) {
-            throw new IllegalArgumentException("File not found: " + pdfFile.getAbsolutePath());
-        }
+            if (!pdfFile.exists()) {
+                throw new IllegalArgumentException("File not found: " + pdfFile.getAbsolutePath());
+            }
 
-        if (keywordLines.isEmpty()) {
-            throw new IllegalArgumentException("No keywords found. Please add keywords in the database.");
-        }
+            if (keywordLines.isEmpty()) {
+                throw new IllegalArgumentException("No keywords found. Please add keywords in the database.");
+            }
 
-        for (String keyword : keywordLines) {
-            processKeyword(pdfFile, keyword, fileName);
+            for (String keyword : keywordLines) {
+                processKeyword(pdfFile, keyword, fileName);
+            }
+            logger.info("Finished processing all keywords for file: {}", fileName);
+        } catch (IOException e) {
+            logger.error("Error processing file: {}", fileName, e);
+            throw e;
+        } finally {
+            if (tempFile != null) {
+                Files.deleteIfExists(tempFile);
+            }
+            joinedTableDataForMain.joinedTablesData();
         }
-        System.out.println("Exiting...\n\n");
-        // Delete the temporary file
-        Files.deleteIfExists(tempFile);
-        joinedTableDataForMain.joinedTablesData(); // Call joinedTablesData() here after processing all keywords
     }
 
     private void processKeyword(File pdfFile, String keyword, String fileName) {
         try (PDDocument document = Loader.loadPDF(pdfFile)) {
             extractText(document, keyword, fileName);
         } catch (IOException e) {
+            logger.error("Error processing PDF file for keyword '{}' in file '{}': {}", keyword, fileName, e.getMessage(), e);
             throw new RuntimeException("Error processing PDF file for keyword '" + keyword + "': " + e.getMessage(), e);
         }
     }
@@ -120,7 +129,7 @@ public class PDFFileDataExtractor {
         List<SentenceLocation> extractedSentences = extractSentencesWithLocation(document, keyword,
                 pageParagraphs, pageTableRows);
         if (!extractedSentences.isEmpty()) {
-            saveOutputToDatabase(extractedSentences, keyword, pdfFileName); // Save to database
+            saveOutputToDatabase(extractedSentences, keyword, pdfFileName);
         }
     }
 
@@ -238,7 +247,7 @@ public class PDFFileDataExtractor {
 
     private void saveOutputToDatabase(List<SentenceLocation> extractedSentences, String keyword,
             String pdfFileName) {
-        System.out.println("saveOutputToDatabase() method called!");
+        logger.info("saveOutputToDatabase() method called for keyword '{}' in file '{}'", keyword, pdfFileName);
         for (SentenceLocation sentenceLocation : extractedSentences) {
             DataShiftExtractedDataEntity extractedData = new DataShiftExtractedDataEntity();
 
@@ -254,8 +263,12 @@ public class PDFFileDataExtractor {
             extractedData.setPageNumber(String.valueOf(sentenceLocation.getPageNumber()));
             extractedData.setKeywords(keyword);
             extractedData.setEvidence(sentenceLocation.getSentence());
-            dataShiftExtractedDataRepository.save(extractedData);
+            try {
+                dataShiftExtractedDataRepository.save(extractedData);
+            } catch (Exception e) {
+                logger.error("Error saving extracted data to database for keyword '{}' in file '{}': {}", keyword, pdfFileName, e.getMessage(), e);
+            }
         }
-        System.out.println("Data saved to the database successfully.");
+        logger.info("Data saved to the database successfully for keyword '{}' in file '{}'", keyword, pdfFileName);
     }
 }
