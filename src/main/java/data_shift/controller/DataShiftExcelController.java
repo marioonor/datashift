@@ -64,7 +64,7 @@ public class DataShiftExcelController {
     public ResponseEntity<UploadExcelResponseDTO> extractDataFromPdf(@RequestParam("documentName") String documentName)
             throws IOException {
         try {
-            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            String uploadDir = System.getProperty("user.dir") + "/data_shift_web/src/assets/pdfs/";
             File pdfFile = new File(uploadDir + documentName);
             if (!pdfFile.exists()) {
                 return ResponseEntity.badRequest().body(new UploadExcelResponseDTO("File not found: " + documentName));

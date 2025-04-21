@@ -31,7 +31,9 @@ public class DataShiftUploadPDFController {
         }
 
         try {
-            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            // String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            String uploadDir = System.getProperty("user.dir") + "/data_shift_web/src/assets/pdfs/";
+            
             File directory = new File(uploadDir);
 
             if (!directory.exists()) {
@@ -60,7 +62,7 @@ public class DataShiftUploadPDFController {
     @DeleteMapping("/delete")
     public ResponseEntity<Map<String, String>> deleteFile(@RequestParam("filename") String filename) {
         try {
-            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            String uploadDir = System.getProperty("user.dir") + "/data_shift_web/src/assets/pdfs/";
             File fileToDelete = new File(uploadDir + filename);
 
             if (!fileToDelete.exists()) {
