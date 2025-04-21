@@ -65,7 +65,7 @@ This application provides the following key functionalities:
         ./gradlew bootRun
         ```
 
-    The application should now be running on the configured port (default is usually 8080).
+    The application should now be running on the configured port (default is usually 8085).
 
 ## Usage
 
@@ -94,18 +94,3 @@ The application's behavior can be configured through the `application.properties
 * **Keyword Matching Options:** (If any specific configurations are available, e.g., case-insensitive matching).
 * **Security Settings:** Authentication and authorization configurations.
 
-## Contributing
-
-(If you intend to allow contributions)
-
-If you'd like to contribute to this project, please follow these steps:
-
-1.  Fork the repository.
-2.  Create a new branch for your feature or bug fix.
-3.  Make your changes and commit them.
-4.  Push your changes to your fork.
-5.  Submit a pull request.
-
-## License
-
-(Specify the project's license, e.g., MIT License, Apache License 2.0)
