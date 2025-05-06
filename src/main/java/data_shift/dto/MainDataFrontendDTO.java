@@ -12,6 +12,7 @@ public class MainDataFrontendDTO {
     private String controlId;
     private String controlName;
     private String controlDescription;
+    private String keywords;
     private String evidence; 
     private String remarks;
     private String status;
