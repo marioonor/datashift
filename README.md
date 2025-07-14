@@ -1,92 +1,85 @@
-# Full-Stack To-Do Application
+# DataShift: Automated Compliance Evidence Extraction
 
-This is a full-stack To-Do list application featuring a modern Angular frontend and a robust Spring Boot backend. It provides user authentication and two different views for managing tasks: a classic list view and an interactive Kanban board.
+DataShift is a full-stack web application designed to streamline and automate the process of finding and managing evidence for compliance controls within large sets of documents. It allows users to define controls and associated keywords via an Excel upload, and then automatically scans uploaded PDF documents to identify and report on relevant evidence. This significantly reduces manual effort in auditing and compliance verification.
 
-## Features
+## Key Features
 
-- **User Authentication**: Secure user registration and login functionality.
-- **CRUD Operations**: Create, Read, Update, and Delete (CRUD) to-do items.
-- **Dual Views**:
-  - **List View**: A simple, tabular view of all to-do items.
-  - **Kanban View**: An interactive, drag-and-drop board to manage tasks by status (Pending, In Progress, Completed, Cancelled).
-- **Responsive Design**: A clean user interface built with Bootstrap that works on various devices.
-- **Token-based Security**: The backend is set up for token-based authentication to secure the API.
+-   **Control Management**: Define compliance controls, descriptions, and keywords by uploading a single Excel file.
+-   **PDF Document Analysis**: Upload multiple PDF documents, and the system will automatically scan them for predefined keywords.
+-   **Evidence Mapping**: Intelligently maps found evidence (keywords) back to specific controls, providing document names and exact page numbers.
+-   **Interactive Frontend**: A user-friendly Angular interface for uploading files, viewing results, and interacting with documents.
+-   **Embedded PDF Viewer**: An integrated, feature-rich PDF viewer (`ngx-extended-pdf-viewer`) to display source documents, making it easy to verify evidence in context.
+-   **Secure Access**: A straightforward user registration and login system to protect access to the application.
+-   **RESTful API**: A robust Spring Boot backend providing a clear and extensible API for all functionalities.
 
-## Technologies Used
+## How It Works
 
-### Frontend (`todoapp_web`)
+1.  **Define Controls**: The user uploads an Excel spreadsheet containing a list of compliance controls (e.g., `Control ID`, `Control Name`, `Description`). The system processes this file to establish the basis for the audit.
+2.  **Upload Documents**: The user uploads one or more PDF documents (e.g., policy documents, system reports, audit logs) that need to be checked for evidence.
+3.  **Process & Extract**: The user triggers the analysis. The backend scans the PDFs, searching for keywords associated with the defined controls.
+4.  **View Results**: The frontend displays a comprehensive dashboard showing which controls have evidence, in which documents, and on which pages. Users can click to view the document directly in the browser and verify the findings.
 
-- **Angular**: A powerful framework for building dynamic single-page applications.
-- **TypeScript**: For type-safe JavaScript development.
-- **Bootstrap**: For responsive and modern UI components.
-- **Angular CDK**: Used for the drag-and-drop functionality in the Kanban board.
-- **RxJS**: For reactive programming and managing asynchronous operations.
+## Tech Stack
 
-### Backend (`todoapp`)
-
-- **Java**: The core programming language for the backend.
-- **Spring Boot**: For creating stand-alone, production-grade Spring-based applications.
-- **Spring Security**: (Inferred) For handling authentication and authorization.
-- **JPA / Hibernate**: (Inferred) For object-relational mapping and database interaction.
-- **Maven/Gradle**: (Inferred) For project build and dependency management.
+-   **Backend**:
+    -   Java
+    -   Spring Boot (Web, Data JPA)
+    -   Apache POI (for Excel processing)
+    -   Maven
+-   **Frontend**:
+    -   Angular
+    -   TypeScript
+    -   `ngx-extended-pdf-viewer`
+    -   HTML5 / CSS3
+-   **Database**:
+    -   Any relational database supported by JPA (e.g., PostgreSQL, MySQL, H2).
 
 ## Getting Started
 
-Follow these instructions to get a copy of the project up and running on your local machine for development and testing purposes.
-
 ### Prerequisites
 
-- **Java Development Kit (JDK)**: Version 17 or later.
-- **Node.js and npm**: Latest LTS version recommended.
-- **Angular CLI**: `npm install -g @angular/cli`
-- **A relational database**: Such as PostgreSQL, MySQL, or H2.
+-   JDK 17 or later
+-   Maven 3.8+
+-   Node.js and npm
+-   An SQL database server (e.g., PostgreSQL)
 
-### Backend Setup (`todoapp`)
+### Backend Setup (`data_shift` directory)
 
-1.  **Navigate to the backend directory:**
+1.  Clone the repository.
+2.  Navigate to the `data_shift` directory.
+3.  Update the `src/main/resources/application.properties` file with your database connection details (URL, username, password).
+4.  Run the application:
     ```bash
-    cd todoapp
+    mvn spring-boot:run
     ```
+5.  The backend will be running on `http://localhost:8080`.
 
-2.  **Configure the database:**
-    Open `src/main/resources/application.properties` and update the `spring.datasource.*` properties to match your database configuration.
+### Frontend Setup (`data_shift_web` directory)
 
-3.  **Build and run the application:**
-    You can run the application using your IDE by running the `LogintodoappApplication.java` file, or from the command line:
-    ```bash
-    # If using Maven
-    ./mvnw spring-boot:run
-
-    # If using Gradle
-    ./gradlew bootRun
-    ```
-
-4.  The backend API will be running on `http://localhost:8080`.
-
-### Frontend Setup (`todoapp_web`)
-
-1.  **Navigate to the frontend directory:**
-    ```bash
-    cd todoapp_web
-    ```
-
-2.  **Install dependencies:**
+1.  Navigate to the `data_shift_web` directory.
+2.  Install the dependencies:
     ```bash
     npm install
     ```
-
-3.  **Run the development server:**
+3.  Run the development server:
     ```bash
     ng serve
     ```
+4.  The frontend will be available at `http://localhost:4200`.
 
-4.  Open your browser and navigate to `http://localhost:4200`. The application will automatically reload if you change any of the source files.
+## API Endpoints
 
-## Project Structure
+The backend exposes several REST endpoints for the frontend to consume.
 
-The project is organized into two main directories:
+-   `POST /addUser`: Register a new user.
+-   `POST /loginUser`: Authenticate a user.
+-   `POST /api/data-shift/upload`: Upload a PDF file.
+-   `DELETE /api/data-shift/delete`: Delete an uploaded PDF file.
+-   `POST /data/path`: Upload and process the controls Excel file.
+-   `POST /data/pdf`: Trigger data extraction for a specific uploaded PDF.
+-   `GET /main-data`: Fetch the main processed data for display.
+-   `GET /extracted-data`: Fetch raw extracted data points.
 
-- `todoapp/`: Contains the Spring Boot backend application.
-- `todoapp_web/`: Contains the Angular frontend application.
+---
 
-This separation allows for independent development and deployment of the frontend and backend.
+This project serves as a powerful tool for any organization looking to enhance its compliance and auditing workflow through automation.
