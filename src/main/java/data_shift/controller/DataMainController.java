@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/all-main-data") // Base path for this controller
+@RequestMapping("/all-main-data") 
 public class DataMainController {
 
     @Autowired
