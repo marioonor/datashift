@@ -1,96 +1,92 @@
-# GRC Gap Analysis Automation Tool
+# Full-Stack To-Do Application
 
-This Java Spring Boot application automates the process of gap analysis in Governance, Risk, and Compliance (GRC) and compliance by scanning PDF documents submitted by clients. It uses keyword matching to identify relevant information and collect evidence, streamlining the audit and assessment process.
+This is a full-stack To-Do list application featuring a modern Angular frontend and a robust Spring Boot backend. It provides user authentication and two different views for managing tasks: a classic list view and an interactive Kanban board.
 
-## Overview
+## Features
 
-This application provides the following key functionalities:
-
-* **Document Submission:** Clients can securely upload PDF documents through a user-friendly interface (if a UI is implemented) or via API.
-* **Keyword-Based Scanning:** The system allows administrators to define keywords and phrases relevant to specific GRC frameworks, regulations, or compliance standards.
-* **Automated Evidence Collection:** Upon document submission, the application automatically scans the content for the defined keywords. When a keyword is found, the surrounding context (e.g., paragraph, sentence) is extracted as potential evidence.
-* **Gap Identification (Implicit):** By highlighting the presence or absence of keywords related to specific requirements, the application implicitly aids in identifying potential gaps in compliance.
-* **Evidence Management:** The collected evidence is stored and can be reviewed, annotated, and linked to specific requirements or controls.
-* **Reporting:** The application can generate reports summarizing the findings, including the documents scanned, keywords matched, and extracted evidence.
+- **User Authentication**: Secure user registration and login functionality.
+- **CRUD Operations**: Create, Read, Update, and Delete (CRUD) to-do items.
+- **Dual Views**:
+  - **List View**: A simple, tabular view of all to-do items.
+  - **Kanban View**: An interactive, drag-and-drop board to manage tasks by status (Pending, In Progress, Completed, Cancelled).
+- **Responsive Design**: A clean user interface built with Bootstrap that works on various devices.
+- **Token-based Security**: The backend is set up for token-based authentication to secure the API.
 
 ## Technologies Used
 
-* **Java:** The primary programming language.
-* **Spring Boot:** A framework for building stand-alone, production-grade Spring-based Applications.
-* **PDF Processing Library:** (Specify the library used, e.g., Apache PDFBox, iText) for extracting text content from PDF documents.
-* **Database:** (Specify the database used, e.g., PostgreSQL, MySQL, H2) for storing application data, keywords, evidence, and reports.
-* **JPA/Hibernate:** (If used) For object-relational mapping and database interaction.
-* **RESTful APIs:** For external communication and potential integration with other systems.
-* **Security:** (Specify security measures, e.g., Spring Security) for authentication and authorization.
-* **Build Tool:** (Specify the build tool, e.g., Maven, Gradle) for project building and dependency management.
+### Frontend (`todoapp_web`)
+
+- **Angular**: A powerful framework for building dynamic single-page applications.
+- **TypeScript**: For type-safe JavaScript development.
+- **Bootstrap**: For responsive and modern UI components.
+- **Angular CDK**: Used for the drag-and-drop functionality in the Kanban board.
+- **RxJS**: For reactive programming and managing asynchronous operations.
+
+### Backend (`todoapp`)
+
+- **Java**: The core programming language for the backend.
+- **Spring Boot**: For creating stand-alone, production-grade Spring-based applications.
+- **Spring Security**: (Inferred) For handling authentication and authorization.
+- **JPA / Hibernate**: (Inferred) For object-relational mapping and database interaction.
+- **Maven/Gradle**: (Inferred) For project build and dependency management.
 
 ## Getting Started
 
+Follow these instructions to get a copy of the project up and running on your local machine for development and testing purposes.
+
 ### Prerequisites
 
-* **Java Development Kit (JDK):** Ensure you have a compatible JDK installed on your system (version X or higher recommended).
-* **Maven or Gradle:** Make sure you have Maven or Gradle installed, depending on the project's build configuration.
-* **Database:** Set up an instance of the configured database (see "Technologies Used").
+- **Java Development Kit (JDK)**: Version 17 or later.
+- **Node.js and npm**: Latest LTS version recommended.
+- **Angular CLI**: `npm install -g @angular/cli`
+- **A relational database**: Such as PostgreSQL, MySQL, or H2.
 
-### Installation
+### Backend Setup (`todoapp`)
 
-1.  **Clone the Repository:**
+1.  **Navigate to the backend directory:**
     ```bash
-    git clone <repository_url>
-    cd <project_directory>
+    cd todoapp
     ```
 
-2.  **Configure Database:**
-    * Navigate to the `src/main/resources` directory.
-    * Open the `application.properties` or `application.yml` file.
-    * Update the database connection details (URL, username, password) to match your database setup.
+2.  **Configure the database:**
+    Open `src/main/resources/application.properties` and update the `spring.datasource.*` properties to match your database configuration.
 
-3.  **Build the Application:**
-    * **Using Maven:**
-        ```bash
-        mvn clean install
-        ```
-    * **Using Gradle:**
-        ```bash
-        ./gradlew clean build
-        ```
+3.  **Build and run the application:**
+    You can run the application using your IDE by running the `LogintodoappApplication.java` file, or from the command line:
+    ```bash
+    # If using Maven
+    ./mvnw spring-boot:run
 
-4.  **Run the Application:**
-    * **Using Maven:**
-        ```bash
-        mvn spring-boot:run
-        ```
-    * **Using Gradle:**
-        ```bash
-        ./gradlew bootRun
-        ```
+    # If using Gradle
+    ./gradlew bootRun
+    ```
 
-    The application should now be running on the configured port (default is usually 8085).
+4.  The backend API will be running on `http://localhost:8080`.
 
-## Usage
+### Frontend Setup (`todoapp_web`)
 
-(Provide a brief overview of how to use the application. This will depend on whether you have a UI or are primarily using APIs.)
+1.  **Navigate to the frontend directory:**
+    ```bash
+    cd todoapp_web
+    ```
 
-### If a UI is Implemented:
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-1.  Open your web browser and navigate to the application's URL (e.g., `http://localhost:8080`).
-2.  Log in with your credentials (if authentication is enabled).
-3.  Navigate to the "Upload Documents" section and upload the PDF files you want to scan.
-4.  Go to the "Manage Keywords" section to define or view the keywords used for scanning.
-5.  Access the "Scan Results" or "Evidence" section to review the extracted evidence and identified potential gaps.
-6.  Generate reports as needed from the "Reports" section.
+3.  **Run the development server:**
+    ```bash
+    ng serve
+    ```
 
-### If Primarily Using APIs:
+4.  Open your browser and navigate to `http://localhost:4200`. The application will automatically reload if you change any of the source files.
 
-Refer to the API documentation (if available) for instructions on how to interact with the application's endpoints for document submission, keyword management, initiating scans, and retrieving results.
+## Project Structure
 
-## Configuration
+The project is organized into two main directories:
 
-The application's behavior can be configured through the `application.properties` or `application.yml` file. Some key configurations include:
+- `todoapp/`: Contains the Spring Boot backend application.
+- `todoapp_web/`: Contains the Angular frontend application.
 
-* **Database Settings:** Connection details for the database.
-* **Server Port:** The port on which the application runs.
-* **File Upload Settings:** Maximum file size, allowed file types (if applicable).
-* **Keyword Matching Options:** (If any specific configurations are available, e.g., case-insensitive matching).
-* **Security Settings:** Authentication and authorization configurations.
-
+This separation allows for independent development and deployment of the frontend and backend.
