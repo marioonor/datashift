@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datashift.datashift_v2.dto.main.ScannedDTO;
@@ -32,6 +33,13 @@ public class ScannerController {
         List<ScannedResponse> response = list.stream().map(scannedDTO -> mapToScannedResponse(scannedDTO)).collect(Collectors.toList());
         //Return the list/response
         return response;
+    }
+
+    @GetMapping("/scanneddata/{scannedId}")
+    public ScannedResponse getScannedDataById(@PathVariable Long scannedId) {
+        log.info("Printing the data using id {}", scannedId);
+        ScannedDTO scannedDTO = scannedService.getScannedDataById(scannedId);
+        return mapToScannedResponse(scannedDTO);
     }
 
     private ScannedResponse mapToScannedResponse(ScannedDTO scannedDTO) {

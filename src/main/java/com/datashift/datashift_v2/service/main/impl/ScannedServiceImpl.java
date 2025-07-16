@@ -3,11 +3,13 @@ package com.datashift.datashift_v2.service.main.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.tomcat.util.file.ConfigurationSource.Resource;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import com.datashift.datashift_v2.dto.main.ScannedDTO;
 import com.datashift.datashift_v2.entity.main.ScannedEntity;
+import com.datashift.datashift_v2.exceptions.ResourceNotFoundException;
 import com.datashift.datashift_v2.repository.main.ScannedRepository;
 import com.datashift.datashift_v2.service.main.ScannedService;
 
@@ -34,9 +36,14 @@ public class ScannedServiceImpl implements ScannedService {
 
     }
 
+    @Override
+    public ScannedDTO getScannedDataById(Long scannedId) {
+        ScannedEntity optionalScannedData = scannedRepository.findByScannedId(scannedId)
+                .orElseThrow(() -> new ResourceNotFoundException("Data not found with scannedId: " + scannedId));
+        return mapToScannedDTO(optionalScannedData);
+    }
+    
     private ScannedDTO mapToScannedDTO(ScannedEntity scannedEntity) {
         return modelMapper.map(scannedEntity, ScannedDTO.class);
     }
-    
-    
 }

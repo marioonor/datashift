@@ -7,4 +7,7 @@ import com.datashift.datashift_v2.dto.main.ScannedDTO;
 public interface ScannedService {
     
     List<ScannedDTO> getAllScannedData();
+
+    ScannedDTO getScannedDataById(Long scannedId);
+
 }
