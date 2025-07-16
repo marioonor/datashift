@@ -8,13 +8,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datashift.datashift_v2.dto.main.ScannedDTO;
+import com.datashift.datashift_v2.io.ScannedRequest;
 import com.datashift.datashift_v2.io.ScannedResponse;
 import com.datashift.datashift_v2.service.main.ScannedService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,6 +56,19 @@ public class ScannerController {
         scannedService.deleteScannedDataById(scannedId);
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/scanneddata")
+    public ScannedResponse saveScannedData(@Valid @RequestBody ScannedRequest scannedRequest) {
+        log.info("API POST /scanneddata called {}",  scannedRequest);
+        ScannedDTO scannedDTO = mapToScannedDTO(scannedRequest);
+        scannedDTO = scannedService.saveScannedData(scannedDTO);
+        return mapToScannedResponse(scannedDTO);
+    }
+
+
+    private ScannedDTO mapToScannedDTO(ScannedRequest scannedRequest) {
+        return modelMapper.map(scannedRequest, ScannedDTO.class);  
+    }
 
     private ScannedResponse mapToScannedResponse(ScannedDTO scannedDTO) {
         return modelMapper.map(scannedDTO, ScannedResponse.class);

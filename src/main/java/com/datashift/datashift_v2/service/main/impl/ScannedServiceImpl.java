@@ -56,4 +56,19 @@ public class ScannedServiceImpl implements ScannedService {
     private ScannedDTO mapToScannedDTO(ScannedEntity scannedEntity) {
         return modelMapper.map(scannedEntity, ScannedDTO.class);
     }
+
+    @Override
+    public ScannedDTO saveScannedData(ScannedDTO scannedDTO) {
+        ScannedEntity scannedEntity = scannedRepository.findByScannedId(scannedDTO.getScannedId())
+                .orElse(new ScannedEntity());
+
+        scannedEntity.setScannedId(scannedDTO.getScannedId());
+        scannedEntity.setKeyword(scannedDTO.getKeyword());
+        scannedEntity.setPage(scannedDTO.getPage());
+        scannedEntity.setSentence(scannedDTO.getSentence());
+
+        ScannedEntity savedEntity = scannedRepository.save(scannedEntity);
+        return mapToScannedDTO(savedEntity);
+    }
+
 }

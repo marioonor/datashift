@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ScannedRequest {
 
+    private Long scannedId;
     private String keyword;
     private Long page;
     private String sentence;

@@ -12,4 +12,6 @@ public interface ScannedService {
 
     void deleteScannedDataById(Long scannedId);
 
+    ScannedDTO saveScannedData(ScannedDTO scannedDTO);
+
 }

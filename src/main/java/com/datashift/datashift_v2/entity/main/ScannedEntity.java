@@ -21,7 +21,7 @@ public class ScannedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     private Long scannedId; 
     private String keyword;
     private Long page;
