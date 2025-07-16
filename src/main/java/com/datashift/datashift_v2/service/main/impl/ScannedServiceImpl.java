@@ -24,7 +24,7 @@ public class ScannedServiceImpl implements ScannedService {
 
     @Override
     public List<ScannedDTO> getAllScannedData() {
-        //Call the repository method
+        //Call the repository method 
         List<ScannedEntity> list = scannedRepository.findAll();
         log.info("Printing the data from repository", list);
         //Convert the entity object to DTO object
