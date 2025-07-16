@@ -3,7 +3,6 @@ package com.datashift.datashift_v2.service.main.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.tomcat.util.file.ConfigurationSource.Resource;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -38,11 +37,22 @@ public class ScannedServiceImpl implements ScannedService {
 
     @Override
     public ScannedDTO getScannedDataById(Long scannedId) {
-        ScannedEntity optionalScannedData = scannedRepository.findByScannedId(scannedId)
-                .orElseThrow(() -> new ResourceNotFoundException("Data not found with scannedId: " + scannedId));
+        ScannedEntity optionalScannedData = getScannedEntity(scannedId);
         return mapToScannedDTO(optionalScannedData);
     }
-    
+
+    @Override
+    public void deleteScannedDataById(Long scannedId) {
+        ScannedEntity scannedEntity = getScannedEntity(scannedId);
+        log.info("Printing the  data to be deleted {}", scannedEntity);
+        scannedRepository.delete(scannedEntity);
+    }
+
+    private ScannedEntity getScannedEntity(Long scannedId) {
+        return scannedRepository.findByScannedId(scannedId)
+                .orElseThrow(() -> new ResourceNotFoundException("Data not found with scannedId: " + scannedId));
+    }
+
     private ScannedDTO mapToScannedDTO(ScannedEntity scannedEntity) {
         return modelMapper.map(scannedEntity, ScannedDTO.class);
     }

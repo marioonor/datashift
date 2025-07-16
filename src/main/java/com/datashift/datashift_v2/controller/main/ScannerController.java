@@ -4,8 +4,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datashift.datashift_v2.dto.main.ScannedDTO;
@@ -41,6 +44,14 @@ public class ScannerController {
         ScannedDTO scannedDTO = scannedService.getScannedDataById(scannedId);
         return mapToScannedResponse(scannedDTO);
     }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/scanneddata/{scannedId}")
+    public void deleteScannedDataById(@PathVariable Long scannedId) {
+        log.info("API DELETE /scanneddata/{scannedId} called", scannedId);
+        scannedService.deleteScannedDataById(scannedId);
+    }
+
 
     private ScannedResponse mapToScannedResponse(ScannedDTO scannedDTO) {
         return modelMapper.map(scannedDTO, ScannedResponse.class);
