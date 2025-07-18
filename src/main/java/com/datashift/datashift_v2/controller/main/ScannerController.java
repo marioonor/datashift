@@ -57,7 +57,6 @@ public class ScannerController {
         return mapToScannedResponse(scannedDTO);
     }
 
-    
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/scanneddata/{id}")
     public void deleteScannedDataById(@PathVariable Long id) {
@@ -75,18 +74,22 @@ public class ScannerController {
     }
 
     @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<List<ScannedDTO>> extractFromPdf(@RequestParam("file") MultipartFile file,
-    		@RequestParam(value = "keyword", required = false) String optionalKeyword,
+    public ResponseEntity<List<ScannedDTO>> extractFromPdf(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "keyword", required = false) String optionalKeyword,
             @RequestParam("keyword") String keyword) throws IOException {
         return ResponseEntity.ok(scannedService.extract(file, keyword));
     }
 
     // Test only
-    @PostMapping(value = "/testextract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> testExtractFromPdf(@RequestParam("file") MultipartFile file) {
-        log.info("Test extract endpoint called with file: {}", file.getOriginalFilename());
-        return ResponseEntity.ok("File received: " + file.getOriginalFilename());
-    }
+    // @PostMapping(value = "/testextract", consumes =
+    // MediaType.MULTIPART_FORM_DATA_VALUE)
+    // public ResponseEntity<String> testExtractFromPdf(@RequestParam("file")
+    // MultipartFile file) {
+    // log.info("Test extract endpoint called with file: {}",
+    // file.getOriginalFilename());
+    // return ResponseEntity.ok("File received: " + file.getOriginalFilename());
+    // }
 
     @PutMapping("/scanneddata/{id}")
     public ScannedResponse updateScannedDataById(@PathVariable Long id,
