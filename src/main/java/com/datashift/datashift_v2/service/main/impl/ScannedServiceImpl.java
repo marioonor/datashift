@@ -92,7 +92,7 @@ public class ScannedServiceImpl implements ScannedService {
     }
 
     @Override
-    public List<ScannedDTO> extract(MultipartFile file, String keyword) {
+    public List<ScannedDTO> extract(MultipartFile file, List<String> keywords) {
 
         List<ScannedDTO> foundData = new ArrayList<>();
 
@@ -110,12 +110,14 @@ public class ScannedServiceImpl implements ScannedService {
                     if (sentence.isBlank()) {
                         continue;
                     }
-                    if (sentence.toLowerCase().contains(keyword.toLowerCase())) {
-                        ScannedDTO scannedDTO = new ScannedDTO();
-                        scannedDTO.setKeyword(keyword);
-                        scannedDTO.setPage(page);
-                        scannedDTO.setSentence(sentence);
-                        foundData.add(scannedDTO);
+                    for (String keyword : keywords) {
+                        if (sentence.toLowerCase().contains(keyword.toLowerCase())) {
+                            ScannedDTO scannedDTO = new ScannedDTO();
+                            scannedDTO.setKeyword(keyword);
+                            scannedDTO.setPage(page);
+                            scannedDTO.setSentence(sentence);
+                            foundData.add(scannedDTO);
+                        }
                     }
 
                 }

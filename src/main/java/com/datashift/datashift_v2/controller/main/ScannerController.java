@@ -23,6 +23,8 @@ import com.datashift.datashift_v2.dto.main.ScannedDTO;
 import com.datashift.datashift_v2.io.ScannedRequest;
 import com.datashift.datashift_v2.io.ScannedResponse;
 import com.datashift.datashift_v2.service.main.ScannedService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -73,12 +75,17 @@ public class ScannerController {
         return mapToScannedResponse(scannedDTO);
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<List<ScannedDTO>> extractFromPdf(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "keyword", required = false) String optionalKeyword,
-            @RequestParam("keyword") String keyword) throws IOException {
-        return ResponseEntity.ok(scannedService.extract(file, keyword));
+            @RequestParam("keywords") String keywordsJson) throws IOException {
+            
+                ObjectMapper objectMapper = new ObjectMapper();
+                List<String> keywords = objectMapper.readValue(keywordsJson, new TypeReference<List<String>>() {});
+
+                return ResponseEntity.ok(scannedService.extract(file, keywords));
+    
     }
 
     // Test only

@@ -18,6 +18,6 @@ public interface ScannedService {
 
     ScannedDTO updateScannedDataDetails(ScannedDTO scannedDTO, Long scannedId);
 
-    List<ScannedDTO> extract(MultipartFile file, String keyword);
+    List<ScannedDTO> extract(MultipartFile file, List<String> keywords);
 
 }
