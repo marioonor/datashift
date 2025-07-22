@@ -9,13 +9,18 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.datashift.datashift_v2.dto.main.ScannedDTO;
 import com.datashift.datashift_v2.entity.main.ScannedEntity;
+import com.datashift.datashift_v2.entity.users.UserEntity;
 import com.datashift.datashift_v2.exceptions.ResourceNotFoundException;
 import com.datashift.datashift_v2.repository.main.ScannedRepository;
+import com.datashift.datashift_v2.repository.users.UserRepository;
 import com.datashift.datashift_v2.service.main.ScannedService;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +33,7 @@ public class ScannedServiceImpl implements ScannedService {
 
     private final ScannedRepository scannedRepository;
     private final ModelMapper modelMapper;
+    private final UserRepository userRepository;
 
     @Override
     public List<ScannedDTO> getAllScannedData() {
@@ -66,9 +72,14 @@ public class ScannedServiceImpl implements ScannedService {
 
     @Override
     public ScannedDTO saveScannedData(ScannedDTO scannedDTO) {
-        ScannedEntity scannedEntity = mapToScannedEntity(scannedDTO);
-        scannedEntity.setId(null); 
- 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        ScannedEntity scannedEntity = mapToScannedEntity(scannedDTO, user);
+        scannedEntity.setId(null);
+
         ScannedEntity savedEntity = scannedRepository.save(scannedEntity);
         return mapToScannedDTO(savedEntity);
     }
@@ -76,15 +87,27 @@ public class ScannedServiceImpl implements ScannedService {
     @Override
     public ScannedDTO updateScannedDataDetails(ScannedDTO scannedDTO, Long scannedId) {
         ScannedEntity existingData = getScannedEntity(scannedId);
-        ScannedEntity updateScannedEntity = mapToScannedEntity(scannedDTO);
+
+        // ✅ Extract authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // ✅ Map DTO to entity and set user
+        ScannedEntity updateScannedEntity = mapToScannedEntity(scannedDTO, user);
         updateScannedEntity.setId(existingData.getId());
+
         updateScannedEntity = scannedRepository.save(updateScannedEntity);
+
         log.info("Printing the updated data details {}", scannedDTO);
         return mapToScannedDTO(updateScannedEntity);
     }
 
-    private ScannedEntity mapToScannedEntity(ScannedDTO scannedDTO) {
-        return modelMapper.map(scannedDTO, ScannedEntity.class);
+    private ScannedEntity mapToScannedEntity(ScannedDTO scannedDTO, UserEntity user) {
+        ScannedEntity entity = modelMapper.map(scannedDTO, ScannedEntity.class);
+        entity.setUser(user); // ✅ Add the user manually after mapping
+        return entity;
     }
 
     @Override
@@ -125,8 +148,13 @@ public class ScannedServiceImpl implements ScannedService {
         }
 
         if (!foundData.isEmpty()) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
+            UserEntity user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
             List<ScannedEntity> entitiesToSave = foundData.stream()
-                    .map(this::mapToScannedEntity)
+                    .map(dto -> mapToScannedEntity(dto, user)) // ✅ pass user explicitly
                     .collect(Collectors.toList());
 
             List<ScannedEntity> savedEntities = scannedRepository.saveAll(entitiesToSave);

@@ -18,6 +18,7 @@ import com.datashift.datashift_v2.io.RegisterRequest;
 import com.datashift.datashift_v2.service.users.TokenBlacklistService;
 
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.modelmapper.ModelMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @RestController
 @Slf4j
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class UserController {
 
