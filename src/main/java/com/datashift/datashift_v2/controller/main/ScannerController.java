@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,22 +32,19 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "http://localhost:4200")
 public class ScannerController {
 
     private final ScannedService scannedService;
     private final ModelMapper modelMapper;
+    private final ObjectMapper objectMapper;
 
     @GetMapping("/scanneddata")
     public List<ScannedResponse> getAllDataScanned() {
         log.info("API GET /scanneddata called");
-        // Call the service method
         List<ScannedDTO> list = scannedService.getAllScannedData();
         log.info("Printing the data from service {}", list);
-        // Convert the Scanned DTO to Scanned Response
         List<ScannedResponse> response = list.stream().map(scannedDTO -> mapToScannedResponse(scannedDTO))
                 .collect(Collectors.toList());
-        // Return the list/response
         return response;
     }
 
@@ -75,28 +71,15 @@ public class ScannerController {
         return mapToScannedResponse(scannedDTO);
     }
 
-    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<List<ScannedDTO>> extractFromPdf(
             @RequestParam("file") MultipartFile file,
             @RequestParam("keywords") String keywordsJson) throws IOException {
-            
-                ObjectMapper objectMapper = new ObjectMapper();
-                List<String> keywords = objectMapper.readValue(keywordsJson, new TypeReference<List<String>>() {});
 
-                return ResponseEntity.ok(scannedService.extract(file, keywords));
-    
+        List<String> keywords = objectMapper.readValue(keywordsJson, new TypeReference<List<String>>() {});
+        List<ScannedDTO> extractedData = scannedService.extract(file, keywords);
+        return new ResponseEntity<>(extractedData, HttpStatus.CREATED);
     }
-
-    // Test only
-    // @PostMapping(value = "/testextract", consumes =
-    // MediaType.MULTIPART_FORM_DATA_VALUE)
-    // public ResponseEntity<String> testExtractFromPdf(@RequestParam("file")
-    // MultipartFile file) {
-    // log.info("Test extract endpoint called with file: {}",
-    // file.getOriginalFilename());
-    // return ResponseEntity.ok("File received: " + file.getOriginalFilename());
-    // }
 
     @PutMapping("/scanneddata/{id}")
     public ScannedResponse updateScannedDataById(@PathVariable Long id,

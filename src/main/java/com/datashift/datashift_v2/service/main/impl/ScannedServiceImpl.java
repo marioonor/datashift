@@ -66,13 +66,9 @@ public class ScannedServiceImpl implements ScannedService {
 
     @Override
     public ScannedDTO saveScannedData(ScannedDTO scannedDTO) {
-        ScannedEntity scannedEntity = scannedRepository.findById(scannedDTO.getId())
-                .orElse(new ScannedEntity());
-
-        scannedEntity.setKeyword(scannedDTO.getKeyword());
-        scannedEntity.setPage(scannedDTO.getPage());
-        scannedEntity.setSentence(scannedDTO.getSentence());
-
+        ScannedEntity scannedEntity = mapToScannedEntity(scannedDTO);
+        scannedEntity.setId(null); 
+ 
         ScannedEntity savedEntity = scannedRepository.save(scannedEntity);
         return mapToScannedDTO(savedEntity);
     }
