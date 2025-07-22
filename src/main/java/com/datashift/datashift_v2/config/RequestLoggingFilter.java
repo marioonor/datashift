@@ -19,7 +19,6 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Only log for the endpoint we are debugging
         if ("/api/extract".equals(request.getRequestURI())) {
             log.info(">>>>>>>>> Logging headers for /api/extract <<<<<<<<<");
             Collections.list(request.getHeaderNames()).forEach(headerName -> 
