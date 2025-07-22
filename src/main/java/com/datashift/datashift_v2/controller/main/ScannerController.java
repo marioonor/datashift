@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api")
 @Slf4j
 public class ScannerController {
 
@@ -39,7 +41,7 @@ public class ScannerController {
     private final ObjectMapper objectMapper;
 
     @GetMapping("/scanneddata")
-    public List<ScannedResponse> getAllDataScanned() {
+    public List<ScannedResponse> getAllScannedData() {
         log.info("API GET /scanneddata called");
         List<ScannedDTO> list = scannedService.getAllScannedData();
         log.info("Printing the data from service {}", list);
@@ -72,13 +74,16 @@ public class ScannerController {
     }
 
     @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<List<ScannedDTO>> extractFromPdf(
+    public ResponseEntity<List<ScannedResponse>> extractFromPdf(
             @RequestParam("file") MultipartFile file,
             @RequestParam("keywords") String keywordsJson) throws IOException {
 
         List<String> keywords = objectMapper.readValue(keywordsJson, new TypeReference<List<String>>() {});
         List<ScannedDTO> extractedData = scannedService.extract(file, keywords);
-        return new ResponseEntity<>(extractedData, HttpStatus.CREATED);
+        List<ScannedResponse> response = extractedData.stream()
+                .map(this::mapToScannedResponse)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PutMapping("/scanneddata/{id}")
