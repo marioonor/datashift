@@ -1,4 +1,4 @@
-package com.datashift.datashift_v2.service.main.impl;
+package com.datashift.datashift_v2.service.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,6 +11,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +24,7 @@ import com.datashift.datashift_v2.repository.main.ScannedRepository;
 import com.datashift.datashift_v2.repository.users.UserRepository;
 import com.datashift.datashift_v2.service.main.ScannedService;
 
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,14 +38,26 @@ public class ScannedServiceImpl implements ScannedService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<ScannedDTO> getAllScannedData() {
-        // Call the repository method
-        List<ScannedEntity> list = scannedRepository.findAll();
-        log.info("Printing the data from repository", list);
-        // Convert the entity object to DTO object
-        List<ScannedDTO> listOfDataScanned = list.stream().map(scannedEntity -> mapToScannedDTO(scannedEntity))
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || !(authentication.getPrincipal() instanceof UserDetails)) {
+            throw new IllegalStateException("User not authenticated. Cannot fetch scanned data.");
+        }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String email = userDetails.getUsername();
+        UserEntity authenticatedUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "Authenticated user not found in database: " + email));
+
+        List<ScannedEntity> userScannedData = scannedRepository.findByUserId(authenticatedUser.getId());
+        log.info("Found {} scanned data entries for user {}", userScannedData.size(), email);
+
+        List<ScannedDTO> listOfDataScanned = userScannedData.stream()
+                .map(scannedEntity -> mapToScannedDTO(scannedEntity))
                 .collect(Collectors.toList());
-        // Return the list
         return listOfDataScanned;
 
     }
@@ -154,7 +168,7 @@ public class ScannedServiceImpl implements ScannedService {
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
             List<ScannedEntity> entitiesToSave = foundData.stream()
-                    .map(dto -> mapToScannedEntity(dto, user)) // ✅ pass user explicitly
+                    .map(dto -> mapToScannedEntity(dto, user))
                     .collect(Collectors.toList());
 
             List<ScannedEntity> savedEntities = scannedRepository.saveAll(entitiesToSave);

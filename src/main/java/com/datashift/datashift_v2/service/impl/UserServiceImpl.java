@@ -1,4 +1,4 @@
-package com.datashift.datashift_v2.service.main.impl;
+package com.datashift.datashift_v2.service.impl;
 
 import java.util.Optional;
 import java.util.UUID;
