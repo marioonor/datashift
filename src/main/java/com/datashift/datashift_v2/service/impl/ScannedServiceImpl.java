@@ -102,13 +102,11 @@ public class ScannedServiceImpl implements ScannedService {
     public ScannedDTO updateScannedDataDetails(ScannedDTO scannedDTO, Long scannedId) {
         ScannedEntity existingData = getScannedEntity(scannedId);
 
-        // ✅ Extract authenticated user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        // ✅ Map DTO to entity and set user
         ScannedEntity updateScannedEntity = mapToScannedEntity(scannedDTO, user);
         updateScannedEntity.setId(existingData.getId());
 
@@ -120,7 +118,7 @@ public class ScannedServiceImpl implements ScannedService {
 
     private ScannedEntity mapToScannedEntity(ScannedDTO scannedDTO, UserEntity user) {
         ScannedEntity entity = modelMapper.map(scannedDTO, ScannedEntity.class);
-        entity.setUser(user); // ✅ Add the user manually after mapping
+        entity.setUser(user);
         return entity;
     }
 
@@ -138,7 +136,9 @@ public class ScannedServiceImpl implements ScannedService {
 
                 String pageText = stripper.getText(document);
 
-                String[] sentences = pageText.split("(?<=[.!?])\\s+");
+                String cleanedText = pageText.replaceAll("(?m)^\\s*_+\\s*$\\r?\\n?", "");
+                String[] sentences = cleanedText.split("(?<=[.!?])\\s+");
+
                 for (String sentence : sentences) {
                     if (sentence.isBlank()) {
                         continue;
