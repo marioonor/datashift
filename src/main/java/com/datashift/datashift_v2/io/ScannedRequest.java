@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class ScannedRequest {
 
     private Long id;
+    private String fileName;
     private String keyword;
     private int page;
     private String sentence;

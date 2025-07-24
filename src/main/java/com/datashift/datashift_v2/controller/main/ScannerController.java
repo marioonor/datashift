@@ -79,7 +79,7 @@ public class ScannerController {
             @RequestParam("keywords") String keywordsJson) throws IOException {
 
         List<String> keywords = objectMapper.readValue(keywordsJson, new TypeReference<List<String>>() {});
-        List<ScannedDTO> extractedData = scannedService.extract(file, keywords);
+        List<ScannedDTO> extractedData = scannedService.extract(file, file.getOriginalFilename(), keywords);
         List<ScannedResponse> response = extractedData.stream()
                 .map(this::mapToScannedResponse)
                 .collect(Collectors.toList());

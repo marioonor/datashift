@@ -29,7 +29,10 @@ public class ScannedEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // private Long scannedId;
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String fileName;
+    
     private String keyword;
     private int page;
 

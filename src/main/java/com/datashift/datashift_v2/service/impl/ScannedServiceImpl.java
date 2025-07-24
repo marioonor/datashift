@@ -123,7 +123,9 @@ public class ScannedServiceImpl implements ScannedService {
     }
 
     @Override
-    public List<ScannedDTO> extract(MultipartFile file, List<String> keywords) {
+    public List<ScannedDTO> extract(MultipartFile file, String fileName, List<String> keywords) {
+
+        String nameOfFile = file.getOriginalFilename();
 
         List<ScannedDTO> foundData = new ArrayList<>();
 
@@ -136,7 +138,7 @@ public class ScannedServiceImpl implements ScannedService {
 
                 String pageText = stripper.getText(document);
 
-                String cleanedText = pageText.replaceAll("(?m)^\\s*_+\\s*$\\r?\\n?", "");
+                String cleanedText = pageText.replaceAll("(?m)^\\s*_+\\s*$\\r?\\n?|^.*\\.{5,}.*$\\r?\\n?", "");
                 String[] sentences = cleanedText.split("(?<=[.!?])\\s+");
 
                 for (String sentence : sentences) {
@@ -146,6 +148,7 @@ public class ScannedServiceImpl implements ScannedService {
                     for (String keyword : keywords) {
                         if (sentence.toLowerCase().contains(keyword.toLowerCase())) {
                             ScannedDTO scannedDTO = new ScannedDTO();
+                            scannedDTO.setFileName(nameOfFile);
                             scannedDTO.setKeyword(keyword);
                             scannedDTO.setPage(page);
                             scannedDTO.setSentence(sentence);
